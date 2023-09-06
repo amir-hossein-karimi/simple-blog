@@ -11,14 +11,12 @@ const ArticlePage = () => {
   const { articleId } = useParams();
 
   useEffect(() => {
-    const loadArticleInfo = async () => {
+    (async () => {
       const response = await axios.get(`/api/articles/${articleId}`);
       const newArticleInfo = response.data;
       setArticleInfo(newArticleInfo);
-    };
-
-    loadArticleInfo();
-  }, []);
+    })();
+  }, [articleId]);
 
   const article = articles.find((article) => article.name === articleId);
 
