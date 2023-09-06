@@ -1,26 +1,34 @@
 import express from "express";
+import { MongoClient } from "mongodb";
 
-const articles = [
-  {
-    name: "react",
-    vote: 0,
-    comments: [],
-  },
-  {
-    name: "nodejs",
-    vote: 0,
-    comments: [],
-  },
-  {
-    name: "react native",
-    vote: 0,
-    comments: [],
-  },
-];
+const articles = [];
 
 const app = express();
 
 app.use(express.json());
+
+app.get("/api/articles/:name", async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    const client = new MongoClient("mongodb://127.0.0.1:27017");
+    await client.connect();
+
+    const db = client.db("simple-blog");
+
+    const article = await db.collection("articles").findOne({ name });
+
+    if (article) {
+      res.send(article);
+    } else {
+      res.statusCode = 404;
+      res.send("article not found");
+    }
+  } catch (e) {
+    console.log(e);
+    res.send("has error");
+  }
+});
 
 app.put("/api/articles/:name/upvote", (req, res) => {
   const { name } = req.params;
