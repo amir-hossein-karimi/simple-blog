@@ -21,8 +21,7 @@ app.get("/api/articles/:name", async (req, res) => {
     if (article) {
       res.send(article);
     } else {
-      res.statusCode = 404;
-      res.send("article not found");
+      res.status(404).send("article not found");
     }
   } catch (e) {
     console.log(e);
@@ -49,18 +48,22 @@ app.put("/api/articles/:name/upvote", async (req, res) => {
   }
 });
 
-app.post("/api/articles/:name/comments", (req, res) => {
+app.post("/api/articles/:name/comments", async (req, res) => {
   const { postedBy, text } = req.body;
   const { name } = req.params;
 
-  const article = articles.find((item) => item.name === name);
+  const client = new MongoClient("mongodb://127.0.0.1:27017");
+  await client.connect();
 
-  if (article) {
-    article.comments.push({
-      postedBy,
-      text,
-    });
+  const db = client.db("simple-blog");
 
+  await db
+    .collection("articles")
+    .updateOne({ name }, { $push: { comments: { postedBy, text } } });
+
+  const articles = await db.collection("articles").find().toArray();
+
+  if (articles) {
     res.send(articles);
   } else {
     res.send("that article dosnt exist");
