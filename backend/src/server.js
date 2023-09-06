@@ -30,13 +30,19 @@ app.get("/api/articles/:name", async (req, res) => {
   }
 });
 
-app.put("/api/articles/:name/upvote", (req, res) => {
+app.put("/api/articles/:name/upvote", async (req, res) => {
   const { name } = req.params;
-  const article = articles.find((item) => item.name === name);
+
+  const client = new MongoClient("mongodb://127.0.0.1:27017");
+  await client.connect();
+
+  const db = client.db("simple-blog");
+
+  await db.collection("articles").updateOne({ name }, { $inc: { vote: 1 } });
+
+  const article = await db.collection("articles").findOne({ name });
 
   if (article) {
-    article.vote += 1;
-
     res.send(`The ${name} article now has ${article.vote} upvotes!!!`);
   } else {
     res.send("that article dosnt exist");
